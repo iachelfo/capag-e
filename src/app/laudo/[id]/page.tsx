@@ -138,10 +138,13 @@ export default function LaudoDetailPage({
           <FileDown className="h-4 w-4" />
           Gerar PDF
         </Link>
-        <button className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        <Link
+          href={`/laudo/${l.id}/editar`}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+        >
           <Edit className="h-4 w-4" />
           Editar
-        </button>
+        </Link>
       </div>
 
       {/* Parecer Técnico */}
