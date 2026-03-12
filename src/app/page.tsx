@@ -1,6 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
-  Scale,
   FilePlus,
   LayoutDashboard,
   Calculator,
@@ -16,9 +16,14 @@ export default function HomePage() {
       {/* Hero */}
       <section className="text-center space-y-4 py-8">
         <div className="flex justify-center">
-          <div className="p-4 rounded-2xl bg-blue-50 dark:bg-blue-950">
-            <Scale className="h-12 w-12 text-blue-600" />
-          </div>
+          <Image
+            src="/icons/chelfo-logo.png"
+            alt="Chelfo"
+            width={120}
+            height={120}
+            className="rounded-xl"
+            priority
+          />
         </div>
         <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
           CAPAG-e
@@ -155,6 +160,28 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* Footer Attribution */}
+      <footer className="text-center py-6 border-t border-gray-200 dark:border-gray-800">
+        <Image
+          src="/icons/chelfo-logo.png"
+          alt="Chelfo"
+          width={48}
+          height={48}
+          className="mx-auto mb-2 rounded-lg"
+        />
+        <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+          Elaborado por Carlos Chelfo
+        </p>
+        <a
+          href="https://instagram.com/Prof.CarlosChelfo"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+        >
+          Instagram: @Prof.CarlosChelfo
+        </a>
+      </footer>
     </div>
   );
 }

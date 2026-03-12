@@ -8,10 +8,10 @@ import {
   Calculator,
   CheckSquare,
   BookOpen,
-  Scale,
   Menu,
   X,
 } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./theme-toggle";
@@ -58,7 +58,13 @@ export function Sidebar() {
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
           <Link href="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
-            <Scale className="h-7 w-7 text-blue-600" />
+            <Image
+              src="/icons/chelfo-logo.png"
+              alt="Chelfo"
+              width={36}
+              height={36}
+              className="rounded-md"
+            />
             <div>
               <h1 className="font-bold text-lg leading-tight text-gray-900 dark:text-white">
                 CAPAG-e
@@ -107,9 +113,22 @@ export function Sidebar() {
             <span className="text-xs text-gray-400">Tema</span>
             <ThemeToggle />
           </div>
-          <p className="text-[10px] text-gray-400 text-center mt-2">
-            Portaria PGFN 6.757/2022
-          </p>
+          <div className="text-center mt-2 space-y-0.5">
+            <p className="text-[10px] text-gray-400">
+              Portaria PGFN 6.757/2022
+            </p>
+            <p className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">
+              Elaborado por Carlos Chelfo
+            </p>
+            <a
+              href="https://instagram.com/Prof.CarlosChelfo"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              @Prof.CarlosChelfo
+            </a>
+          </div>
         </div>
       </aside>
     </>
