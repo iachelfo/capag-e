@@ -1,0 +1,15 @@
+[build]
+  command = "npx prisma generate && npx prisma db push && npx tsx prisma/seed.ts && npm run build"
+  publish = ".next"
+
+[build.environment]
+  DATABASE_URL = "file:./dev.db"
+  NODE_VERSION = "22"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Include the SQLite database in the deployed functions
+[functions]
+  included_files = ["dev.db", "prisma/dev.db", "src/generated/**"]
+  node_bundler = "nft"

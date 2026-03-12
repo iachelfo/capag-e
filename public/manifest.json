@@ -1,0 +1,25 @@
+{
+  "name": "CAPAG-e - Gerador de Laudo",
+  "short_name": "CAPAG-e",
+  "description": "Sistema de geração de laudos técnicos de Capacidade de Pagamento Extraordinária para transações tributárias PGFN",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1e3a5f",
+  "orientation": "any",
+  "categories": ["finance", "business", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

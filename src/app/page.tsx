@@ -1,65 +1,160 @@
-import Image from "next/image";
+import Link from "next/link";
+import {
+  Scale,
+  FilePlus,
+  LayoutDashboard,
+  Calculator,
+  CheckSquare,
+  BookOpen,
+  ArrowRight,
+  Shield,
+} from "lucide-react";
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="max-w-5xl mx-auto space-y-12">
+      {/* Hero */}
+      <section className="text-center space-y-4 py-8">
+        <div className="flex justify-center">
+          <div className="p-4 rounded-2xl bg-blue-50 dark:bg-blue-950">
+            <Scale className="h-12 w-12 text-blue-600" />
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
+          CAPAG-e
+        </h1>
+        <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+          Gerador de Laudo Técnico de Capacidade de Pagamento Extraordinária
+          para transações tributárias junto à PGFN
+        </p>
+        <div className="flex gap-3 justify-center pt-4">
+          <Link
+            href="/laudo/novo"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <FilePlus className="h-5 w-5" />
+            Novo Laudo
+          </Link>
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg font-medium border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
-            Documentation
-          </a>
+            <LayoutDashboard className="h-5 w-5" />
+            Dashboard
+          </Link>
         </div>
-      </main>
+      </section>
+
+      {/* Features Grid */}
+      <section className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[
+          {
+            icon: FilePlus,
+            title: "Laudo Automatizado",
+            desc: "Wizard guiado para criar laudos CAPAG-e com as 10 seções obrigatórias, cálculo automático e geração de PDF.",
+            href: "/laudo/novo",
+          },
+          {
+            icon: Calculator,
+            title: "Simulador de Transação",
+            desc: "Simule descontos e parcelamentos por classificação CAPAG (A, B, C, D) e compare modalidades.",
+            href: "/simulador",
+          },
+          {
+            icon: CheckSquare,
+            title: "Checklist Art. 30",
+            desc: "Checklist interativo dos documentos obrigatórios para evitar indeferimento do pedido.",
+            href: "/checklist",
+          },
+          {
+            icon: BookOpen,
+            title: "Guia Técnico",
+            desc: "Metodologias ROA+PLR e FCO+PLR explicadas, modelo de DFC e casos de referência.",
+            href: "/guia-tecnico",
+          },
+          {
+            icon: LayoutDashboard,
+            title: "Dashboard",
+            desc: "Histórico de laudos, estatísticas por classificação e acompanhamento de status.",
+            href: "/dashboard",
+          },
+          {
+            icon: Shield,
+            title: "Conformidade Legal",
+            desc: "Alinhado à Portaria PGFN 6.757/2022, Lei 14.375/2022 e Portaria 1.457/2024.",
+            href: "/guia-tecnico",
+          },
+        ].map((item) => (
+          <Link
+            key={item.title}
+            href={item.href}
+            className="group p-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-blue-300 dark:hover:border-blue-800 hover:shadow-md transition-all"
+          >
+            <item.icon className="h-8 w-8 text-blue-600 mb-3" />
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+              {item.title}
+              <ArrowRight className="h-4 w-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {item.desc}
+            </p>
+          </Link>
+        ))}
+      </section>
+
+      {/* Classificação CAPAG */}
+      <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          Classificações CAPAG
+        </h2>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            {
+              cls: "A",
+              color: "bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800",
+              badge: "text-green-700 dark:text-green-300",
+              desc: "CAPAG >= 2x dívida",
+              terms: "Sem desconto, até 60 meses",
+            },
+            {
+              cls: "B",
+              color: "bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800",
+              badge: "text-blue-700 dark:text-blue-300",
+              desc: "CAPAG entre 1x e 2x",
+              terms: "Sem desconto, até 60 meses",
+            },
+            {
+              cls: "C",
+              color: "bg-amber-50 border-amber-200 dark:bg-amber-950 dark:border-amber-800",
+              badge: "text-amber-700 dark:text-amber-300",
+              desc: "CAPAG < dívida",
+              terms: "Até 65% desconto, 114 meses",
+            },
+            {
+              cls: "D",
+              color: "bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800",
+              badge: "text-red-700 dark:text-red-300",
+              desc: "Crédito irrecuperável",
+              terms: "Até 70% desconto, 133 meses",
+            },
+          ].map((item) => (
+            <div
+              key={item.cls}
+              className={`p-4 rounded-lg border ${item.color}`}
+            >
+              <div className={`text-2xl font-bold ${item.badge} mb-1`}>
+                Rating {item.cls}
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {item.desc}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                {item.terms}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

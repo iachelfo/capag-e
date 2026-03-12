@@ -1,5 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// CAPAG-e - Schema do Banco de Dados
+// Gerador de Laudo de Capacidade de Pagamento Extraordinária
 
 generator client {
   provider = "prisma-client"
@@ -8,4 +8,272 @@ generator client {
 
 datasource db {
   provider = "sqlite"
+}
+
+// ─── Contribuinte (Contribuinte/Devedor) ───────────────────────
+model Contribuinte {
+  id               Int      @id @default(autoincrement())
+  cpfCnpj          String   @unique @map("cpf_cnpj")
+  razaoSocial      String   @map("razao_social")
+  nomeFantasia     String?  @map("nome_fantasia")
+  tipo             String   // PF | PJ | MEI | SIMPLES
+  regimeTributario String?  @map("regime_tributario") // LUCRO_REAL | LUCRO_PRESUMIDO | SIMPLES_NACIONAL | MEI
+  atividadePrincipal String? @map("atividade_principal")
+  cnae             String?
+  endereco         String?
+  municipio        String?
+  uf               String?
+  telefone         String?
+  email            String?
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  laudos Laudo[]
+
+  @@map("contribuintes")
+}
+
+// ─── Laudo (Laudo Técnico CAPAG-e) ─────────────────────────────
+model Laudo {
+  id                  Int      @id @default(autoincrement())
+  contribuinteId      Int      @map("contribuinte_id")
+  contribuinte        Contribuinte @relation(fields: [contribuinteId], references: [id])
+
+  // Status do workflow
+  status              String   @default("rascunho") // rascunho | em_analise | finalizado
+
+  // Classificação CAPAG
+  classificacaoCapag  String?  @map("classificacao_capag") // A | B | C | D
+  valorCapagE         Float?   @map("valor_capag_e")
+  metodologia         String?  // ROA_PLR | FCO_PLR
+
+  // Campos Metodologia ROA
+  resultadoOperacionalAjustado Float? @map("resultado_operacional_ajustado")
+  patrimonioLiquidoRealizavel  Float? @map("patrimonio_liquido_realizavel")
+  bensEssenciais               Float? @map("bens_essenciais")
+
+  // Campos Metodologia FCO
+  caixaLiquidoOperacional Float? @map("caixa_liquido_operacional")
+
+  // Conteúdo do laudo
+  parecerTecnico     String?  @map("parecer_tecnico")
+  recomendacoes      String?
+  conclusao          String?  // favoravel | desfavoravel | parcial
+  conclusaoTexto     String?  @map("conclusao_texto")
+  limitacoes         String?
+
+  // Contexto da dívida
+  valorDivida        Float?   @map("valor_divida")
+  processoAdmin      String?  @map("processo_admin")
+
+  // Metadados
+  dataEmissao        DateTime? @map("data_emissao")
+  exercicioInicio    Int?     @map("exercicio_inicio")
+  exercicioFim       Int?     @map("exercicio_fim")
+  usuarioId          String?  @map("usuario_id")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  documentos  Documento[]
+  indicadores IndicadorFinanceiro[]
+  balancos    BalancoPatrimonial[]
+  dres        DRE[]
+  dfcs        DFC[]
+  simulacoes  SimulacaoTransacao[]
+  historico   HistoricoAlteracao[]
+
+  @@map("laudos")
+}
+
+// ─── Documento (Documentos Anexados) ───────────────────────────
+model Documento {
+  id             Int      @id @default(autoincrement())
+  laudoId        Int      @map("laudo_id")
+  laudo          Laudo    @relation(fields: [laudoId], references: [id], onDelete: Cascade)
+  tipo           String   // BALANCO | DRE | DFC | DCTF | PGDAS | CONTRATO_SOCIAL | ECAC | IRPJ | OUTROS
+  nomeArquivo    String   @map("nome_arquivo")
+  caminhoArquivo String   @map("caminho_arquivo")
+  tamanhoBytes   Int?     @map("tamanho_bytes")
+  mimeType       String?  @map("mime_type")
+  statusUpload   String   @default("concluido") @map("status_upload") // pendente | concluido | erro
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@map("documentos")
+}
+
+// ─── Balanço Patrimonial ───────────────────────────────────────
+model BalancoPatrimonial {
+  id                    Int    @id @default(autoincrement())
+  laudoId               Int    @map("laudo_id")
+  laudo                 Laudo  @relation(fields: [laudoId], references: [id], onDelete: Cascade)
+  exercicio             Int    // Ano, ex: 2023
+
+  // Ativo
+  ativoCirculante       Float  @map("ativo_circulante")
+  ativoNaoCirculante    Float  @map("ativo_nao_circulante")
+  ativoTotal            Float  @map("ativo_total")
+
+  // Passivo
+  passivoCirculante     Float  @map("passivo_circulante")
+  passivoNaoCirculante  Float  @map("passivo_nao_circulante")
+  passivoTotal          Float  @map("passivo_total")
+
+  // Patrimônio Líquido
+  patrimonioLiquido     Float  @map("patrimonio_liquido")
+
+  // Detalhamento (granularidade opcional)
+  caixaEquivalentes     Float? @map("caixa_equivalentes")
+  estoques              Float?
+  contasReceber         Float? @map("contas_receber")
+  imobilizado           Float?
+  intangivel            Float?
+  contasPagar           Float? @map("contas_pagar")
+  emprestimos           Float?
+
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  @@unique([laudoId, exercicio])
+  @@map("balancos_patrimoniais")
+}
+
+// ─── DRE (Demonstração do Resultado do Exercício) ──────────────
+model DRE {
+  id                      Int    @id @default(autoincrement())
+  laudoId                 Int    @map("laudo_id")
+  laudo                   Laudo  @relation(fields: [laudoId], references: [id], onDelete: Cascade)
+  exercicio               Int
+
+  receitaBruta            Float  @map("receita_bruta")
+  deducoes                Float  @default(0)
+  receitaLiquida          Float  @map("receita_liquida")
+  custosMercadorias       Float  @map("custos_mercadorias")
+  lucroBruto              Float  @map("lucro_bruto")
+  despesasOperacionais    Float  @map("despesas_operacionais")
+  despesasAdministrativas Float? @map("despesas_administrativas")
+  despesasVendas          Float? @map("despesas_vendas")
+  resultadoFinanceiro     Float? @map("resultado_financeiro")
+  resultadoOperacional    Float  @map("resultado_operacional")
+  resultadoAntesIR        Float? @map("resultado_antes_ir")
+  provisaoIRCSLL          Float? @map("provisao_ir_csll")
+  lucroLiquido            Float  @map("lucro_liquido")
+
+  createdAt               DateTime @default(now()) @map("created_at")
+
+  @@unique([laudoId, exercicio])
+  @@map("dres")
+}
+
+// ─── DFC (Demonstração de Fluxo de Caixa) ──────────────────────
+// OBRIGATÓRIO desde Portaria PGFN 1.457/2024
+model DFC {
+  id                        Int    @id @default(autoincrement())
+  laudoId                   Int    @map("laudo_id")
+  laudo                     Laudo  @relation(fields: [laudoId], references: [id], onDelete: Cascade)
+  exercicio                 Int
+  metodo                    String // DIRETO | INDIRETO
+
+  // Atividades Operacionais (Método Direto)
+  recebimentosClientes      Float? @map("recebimentos_clientes")
+  pagamentosFornecedores    Float? @map("pagamentos_fornecedores")
+  pagamentosSalarios        Float? @map("pagamentos_salarios")
+  pagamentosImpostos        Float? @map("pagamentos_impostos")
+  outrosRecebimentos        Float? @map("outros_recebimentos")
+  outrosPagamentos          Float? @map("outros_pagamentos")
+  caixaLiquidoOperacional   Float  @map("caixa_liquido_operacional")
+
+  // Atividades Operacionais (Método Indireto)
+  lucroLiquidoBase          Float? @map("lucro_liquido_base")
+  depreciacaoAmortizacao    Float? @map("depreciacao_amortizacao")
+  variacaoCapitalGiro       Float? @map("variacao_capital_giro")
+
+  // Atividades de Investimento
+  atividadesInvestimento    Float? @map("atividades_investimento")
+
+  // Atividades de Financiamento
+  atividadesFinanciamento   Float? @map("atividades_financiamento")
+
+  // Resultado
+  variacaoLiquidaCaixa      Float? @map("variacao_liquida_caixa")
+  saldoInicialCaixa         Float? @map("saldo_inicial_caixa")
+  saldoFinalCaixa           Float? @map("saldo_final_caixa")
+
+  createdAt                 DateTime @default(now()) @map("created_at")
+
+  @@unique([laudoId, exercicio])
+  @@map("dfcs")
+}
+
+// ─── Indicadores Financeiros ───────────────────────────────────
+model IndicadorFinanceiro {
+  id                       Int    @id @default(autoincrement())
+  laudoId                  Int    @map("laudo_id")
+  laudo                    Laudo  @relation(fields: [laudoId], references: [id], onDelete: Cascade)
+  exercicio                Int
+
+  // Liquidez
+  liquidezCorrente         Float? @map("liquidez_corrente")
+  liquidezSeca             Float? @map("liquidez_seca")
+  liquidezImediata         Float? @map("liquidez_imediata")
+  liquidezGeral            Float? @map("liquidez_geral")
+
+  // Estrutura / Endividamento
+  endividamentoGeral       Float? @map("endividamento_geral")
+  composicaoEndividamento  Float? @map("composicao_endividamento")
+  imobilizacaoPL           Float? @map("imobilizacao_pl")
+
+  // Rentabilidade
+  margemBruta              Float? @map("margem_bruta")
+  margemOperacional        Float? @map("margem_operacional")
+  margemLiquida            Float? @map("margem_liquida")
+  roe                      Float?
+  roa                      Float?
+
+  // Atividade
+  giroAtivo                Float? @map("giro_ativo")
+
+  // Cobertura
+  coberturaDivida          Float? @map("cobertura_divida")
+
+  // Variação de Receita
+  variacaoReceita          Float? @map("variacao_receita")
+
+  createdAt                DateTime @default(now()) @map("created_at")
+
+  @@unique([laudoId, exercicio])
+  @@map("indicadores_financeiros")
+}
+
+// ─── Simulação de Transação Tributária ─────────────────────────
+model SimulacaoTransacao {
+  id                   Int     @id @default(autoincrement())
+  laudoId              Int?    @map("laudo_id")
+  laudo                Laudo?  @relation(fields: [laudoId], references: [id], onDelete: Cascade)
+
+  valorDivida          Float   @map("valor_divida")
+  classificacaoCapag   String  @map("classificacao_capag") // A | B | C | D
+  modalidade           String  // INDIVIDUAL | ADESAO | EXCEPCIONAL
+  prazoMeses           Int     @map("prazo_meses")
+  descontoPercentual   Float   @map("desconto_percentual")
+  valorComDesconto     Float   @map("valor_com_desconto")
+  valorParcela         Float?  @map("valor_parcela")
+  valorEntrada         Float?  @map("valor_entrada")
+  observacoes          String?
+
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  @@map("simulacoes_transacao")
+}
+
+// ─── Histórico de Alterações (Trilha de Auditoria) ─────────────
+model HistoricoAlteracao {
+  id               Int      @id @default(autoincrement())
+  laudoId          Int      @map("laudo_id")
+  laudo            Laudo    @relation(fields: [laudoId], references: [id], onDelete: Cascade)
+  campoAlterado    String   @map("campo_alterado")
+  valorAnterior    String?  @map("valor_anterior")
+  valorNovo        String?  @map("valor_novo")
+  descricao        String?
+  dataAlteracao    DateTime @default(now()) @map("data_alteracao")
+
+  @@map("historico_alteracoes")
 }
