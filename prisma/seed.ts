@@ -1,17 +1,31 @@
+import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaNeonHttp } from "@prisma/adapter-neon";
 
-const adapter = new PrismaBetterSqlite3({ url: "file:./dev.db" });
+const url = process.env.DATABASE_URL;
+if (!url) throw new Error("DATABASE_URL not set — add it to .env");
+
+const adapter = new PrismaNeonHttp(url, {});
 const db = new PrismaClient({ adapter });
 
 async function main() {
   console.log("🌱 Seeding database...");
 
+  // ─── Limpar dados existentes (ordem inversa das FK) ──────
+  console.log("🗑️  Clearing existing data...");
+  await db.simulacaoTransacao.deleteMany();
+  await db.historicoAlteracao.deleteMany();
+  await db.indicadorFinanceiro.deleteMany();
+  await db.dFC.deleteMany();
+  await db.dRE.deleteMany();
+  await db.balancoPatrimonial.deleteMany();
+  await db.documento.deleteMany();
+  await db.laudo.deleteMany();
+  await db.contribuinte.deleteMany();
+
   // ─── Contribuinte 1: Empresa PJ ────────────────────────────
-  const empresa1 = await db.contribuinte.upsert({
-    where: { cpfCnpj: "12.345.678/0001-90" },
-    update: {},
-    create: {
+  const empresa1 = await db.contribuinte.create({
+    data: {
       cpfCnpj: "12.345.678/0001-90",
       razaoSocial: "Tech Solutions Ltda",
       nomeFantasia: "TechSol",
@@ -28,10 +42,8 @@ async function main() {
   });
 
   // ─── Contribuinte 2: Empresa MEI ──────────────────────────
-  const empresa2 = await db.contribuinte.upsert({
-    where: { cpfCnpj: "98.765.432/0001-10" },
-    update: {},
-    create: {
+  const empresa2 = await db.contribuinte.create({
+    data: {
       cpfCnpj: "98.765.432/0001-10",
       razaoSocial: "Maria Silva Confecções ME",
       nomeFantasia: "Ateliê da Maria",
@@ -48,10 +60,8 @@ async function main() {
   });
 
   // ─── Contribuinte 3: Pessoa Física ────────────────────────
-  const pf = await db.contribuinte.upsert({
-    where: { cpfCnpj: "123.456.789-00" },
-    update: {},
-    create: {
+  const pf = await db.contribuinte.create({
+    data: {
       cpfCnpj: "123.456.789-00",
       razaoSocial: "João Carlos Pereira",
       tipo: "PF",

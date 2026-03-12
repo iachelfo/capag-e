@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 // ─── Contribuinte (Contribuinte/Devedor) ───────────────────────

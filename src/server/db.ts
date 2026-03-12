@@ -1,22 +1,26 @@
 import { PrismaClient } from "@/generated/prisma/client";
+import { PrismaNeonHttp } from "@prisma/adapter-neon";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | null;
 };
 
 function createPrismaClient(): PrismaClient | null {
+  const url = process.env.DATABASE_URL;
+
+  if (!url || url.startsWith("file:")) {
+    console.warn(
+      "⚠️ DATABASE_URL not set or points to SQLite — running in demo mode."
+    );
+    return null;
+  }
+
   try {
-    // Dynamic require to handle environments where the native
-    // better-sqlite3 binary might not be available (e.g. wrong platform)
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { PrismaBetterSqlite3 } = require("@prisma/adapter-better-sqlite3");
-    const adapter = new PrismaBetterSqlite3({
-      url: process.env.DATABASE_URL!,
-    });
+    const adapter = new PrismaNeonHttp(url, {});
     return new PrismaClient({ adapter });
   } catch (e) {
     console.warn(
-      "⚠️ SQLite adapter not available — running in demo mode.",
+      "⚠️ Neon adapter not available — running in demo mode.",
       (e as Error).message?.slice(0, 80)
     );
     return null;
