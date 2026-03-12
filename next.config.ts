@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
         trailingSlash: true,
       }
     : {}),
+  // Required by @serwist/turbopack for SW build
+  serverExternalPackages: ["esbuild-wasm"],
 };
 
 export default nextConfig;

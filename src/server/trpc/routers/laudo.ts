@@ -3,6 +3,11 @@ import { createTRPCRouter, baseProcedure } from "../init";
 import { laudoCreateSchema, laudoUpdateSchema } from "@/lib/validators";
 import { calcularCapagE } from "@/server/capag/calculator";
 import { classificarCapag } from "@/server/capag/classification";
+import {
+  gerarParecerTemplate,
+  gerarParecerIA,
+  type ParecerInput,
+} from "@/server/capag/parecer";
 
 export const laudoRouter = createTRPCRouter({
   list: baseProcedure
@@ -197,6 +202,101 @@ export const laudoRouter = createTRPCRouter({
           status: "em_analise",
         },
       });
+    }),
+
+  gerarParecer: baseProcedure
+    .input(
+      z.object({
+        id: z.number().int().positive(),
+        usarIA: z.boolean().default(false),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const laudo = await ctx.db.laudo.findUniqueOrThrow({
+        where: { id: input.id },
+        include: {
+          contribuinte: true,
+          balancos: { orderBy: { exercicio: "asc" } },
+          dres: { orderBy: { exercicio: "asc" } },
+          dfcs: { orderBy: { exercicio: "asc" } },
+          indicadores: { orderBy: { exercicio: "asc" } },
+        },
+      });
+
+      if (!laudo.valorCapagE || !laudo.classificacaoCapag) {
+        throw new Error(
+          "É necessário calcular a CAPAG-e antes de gerar o parecer."
+        );
+      }
+
+      const ultimoBalanco = laudo.balancos[laudo.balancos.length - 1];
+      const ultimaDre = laudo.dres[laudo.dres.length - 1];
+      const ultimoIndicador = laudo.indicadores[laudo.indicadores.length - 1];
+      const dfcsDiretos = laudo.dfcs.filter((d) => d.metodo === "DIRETO");
+
+      if (!ultimoBalanco || !ultimaDre) {
+        throw new Error(
+          "É necessário informar Balanço Patrimonial e DRE para gerar o parecer."
+        );
+      }
+
+      const parecerInput: ParecerInput = {
+        razaoSocial: laudo.contribuinte.razaoSocial,
+        cpfCnpj: laudo.contribuinte.cpfCnpj,
+        tipo: laudo.contribuinte.tipo,
+        valorDivida: laudo.valorDivida ?? 0,
+        metodologia: (laudo.metodologia as "ROA_PLR" | "FCO_PLR") ?? "ROA_PLR",
+        valorCapagE: laudo.valorCapagE,
+        classificacao: laudo.classificacaoCapag as "A" | "B" | "C" | "D",
+        plr: laudo.patrimonioLiquidoRealizavel ?? 0,
+        bensEssenciais: laudo.bensEssenciais ?? 0,
+        indicadores: ultimoIndicador
+          ? {
+              liquidezCorrente: ultimoIndicador.liquidezCorrente,
+              liquidezSeca: ultimoIndicador.liquidezSeca,
+              liquidezImediata: ultimoIndicador.liquidezImediata,
+              liquidezGeral: ultimoIndicador.liquidezGeral,
+              endividamentoGeral: ultimoIndicador.endividamentoGeral,
+              margemBruta: ultimoIndicador.margemBruta,
+              margemOperacional: ultimoIndicador.margemOperacional,
+              margemLiquida: ultimoIndicador.margemLiquida,
+              roe: ultimoIndicador.roe,
+              roa: ultimoIndicador.roa,
+            }
+          : {},
+        exercicioRef: ultimoBalanco.exercicio,
+        temDfcDireto: dfcsDiretos.length > 0,
+        exerciciosDfc: dfcsDiretos.map((d) => d.exercicio),
+        patrimonioLiquido: ultimoBalanco.patrimonioLiquido,
+        ativoTotal: ultimoBalanco.ativoTotal,
+        passivoTotal: ultimoBalanco.passivoTotal,
+      };
+
+      // Tentar IA primeiro, fallback para template
+      let result = null;
+      if (input.usarIA) {
+        result = await gerarParecerIA(parecerInput);
+      }
+      if (!result) {
+        result = gerarParecerTemplate(parecerInput);
+      }
+
+      // Salvar no banco
+      const updated = await ctx.db.laudo.update({
+        where: { id: input.id },
+        data: {
+          parecerTecnico: result.parecerTecnico,
+          conclusao: result.conclusao,
+          conclusaoTexto: result.conclusaoTexto,
+          recomendacoes: result.recomendacoes,
+          limitacoes: result.limitacoes,
+        },
+      });
+
+      return {
+        ...result,
+        laudoId: updated.id,
+      };
     }),
 
   delete: baseProcedure

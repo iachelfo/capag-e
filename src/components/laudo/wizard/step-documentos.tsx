@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import type { WizardData, DocumentoData } from "@/hooks/use-wizard";
 import { TIPOS_DOCUMENTO } from "@/lib/constants";
 import { Upload, FileText, Trash2, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Props {
   data: WizardData;
@@ -32,7 +33,7 @@ export function StepDocumentos({ data, onUpdate }: Props) {
 
         if (!res.ok) {
           const err = await res.json();
-          alert(`Erro ao enviar ${file.name}: ${err.error}`);
+          toast.error(`Erro ao enviar ${file.name}: ${err.error}`);
           continue;
         }
 
@@ -45,7 +46,7 @@ export function StepDocumentos({ data, onUpdate }: Props) {
           mimeType: result.mimeType,
         });
       } catch {
-        alert(`Erro ao enviar ${file.name}`);
+        toast.error(`Erro ao enviar ${file.name}`);
       }
     }
 

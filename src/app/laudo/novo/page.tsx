@@ -12,6 +12,7 @@ import { StepIndicadores } from "@/components/laudo/wizard/step-indicadores";
 import { StepDocumentos } from "@/components/laudo/wizard/step-documentos";
 import { StepRevisao } from "@/components/laudo/wizard/step-revisao";
 import { useState } from "react";
+import { toast } from "sonner";
 
 const STEPS = [
   { label: "Contribuinte", desc: "Dados do contribuinte" },
@@ -59,7 +60,7 @@ export default function NovoLaudoPage() {
       }
 
       if (!contribuinteId) {
-        alert("Informe o contribuinte antes de salvar.");
+        toast.error("Informe o contribuinte antes de salvar.");
         setSaving(false);
         return;
       }
@@ -104,7 +105,7 @@ export default function NovoLaudoPage() {
       // Navigate to the newly created laudo
       router.push(`/laudo/${laudo.id}`);
     } catch (e: any) {
-      alert(e.message ?? "Erro ao salvar laudo.");
+      toast.error(e.message ?? "Erro ao salvar laudo.");
       setSaving(false);
     }
   }
