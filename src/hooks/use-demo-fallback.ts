@@ -10,19 +10,13 @@ export function useDemoMode(): boolean {
   const [isDemoMode, setIsDemoMode] = useState(false);
 
   useEffect(() => {
-    // Check if we already know we're in demo mode
-    if (typeof window !== "undefined" && sessionStorage.getItem(DEMO_MODE_KEY) === "true") {
-      setIsDemoMode(true);
-      return;
-    }
-
     // Force demo mode if env var is set
     if (process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
       setIsDemoMode(true);
       return;
     }
 
-    // Probe the tRPC endpoint
+    // Probe the tRPC endpoint (always probe, even if cached)
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 3000);
 
@@ -31,6 +25,9 @@ export function useDemoMode(): boolean {
         clearTimeout(timeout);
         if (!res.ok) throw new Error("Backend error");
         setIsDemoMode(false);
+        if (typeof window !== "undefined") {
+          sessionStorage.removeItem(DEMO_MODE_KEY);
+        }
       })
       .catch(() => {
         clearTimeout(timeout);
