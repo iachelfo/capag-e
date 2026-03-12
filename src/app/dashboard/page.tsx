@@ -4,7 +4,6 @@ import { trpc } from "@/server/trpc/client";
 import { CapagBadge } from "@/components/laudo/capag-badge";
 import { STATUS_LAUDO } from "@/lib/constants";
 import { formatBRL, formatDate, formatCpfCnpj } from "@/lib/formatters";
-import { useDemoMode, useDemoQuery } from "@/hooks/use-demo-fallback";
 import { DEMO_STATS, DEMO_LAUDOS } from "@/lib/demo-data";
 import Link from "next/link";
 import {
@@ -18,33 +17,27 @@ import {
 } from "lucide-react";
 
 export default function DashboardPage() {
-  const demoMode = useDemoMode();
+  // Always run live queries — fall back to demo data only if they fail
+  const statsQuery = trpc.laudo.getStats.useQuery();
+  const laudosQuery = trpc.laudo.list.useQuery({ take: 10 });
 
-  const statsLive = trpc.laudo.getStats.useQuery(undefined, {
-    enabled: !demoMode,
-  });
-  const laudosLive = trpc.laudo.list.useQuery(
-    { take: 10 },
-    { enabled: !demoMode }
-  );
+  const usingDemoData = statsQuery.isError;
 
-  const demoStats = useDemoQuery(DEMO_STATS);
-  const demoLaudos = useDemoQuery({
-    items: DEMO_LAUDOS,
-    total: DEMO_LAUDOS.length,
-  });
-
-  const stats = demoMode ? demoStats : statsLive;
-  const laudos = demoMode ? demoLaudos : laudosLive;
+  const stats = usingDemoData
+    ? { data: DEMO_STATS, isLoading: false }
+    : statsQuery;
+  const laudos = usingDemoData
+    ? { data: { items: DEMO_LAUDOS, total: DEMO_LAUDOS.length }, isLoading: false }
+    : laudosQuery;
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
-      {demoMode && (
+      {usingDemoData && (
         <div className="flex items-center gap-2 px-4 py-3 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg text-sm text-amber-800 dark:text-amber-200">
           <Info className="h-4 w-4 shrink-0" />
           <span>
-            Modo demonstração — dados de exemplo. Para uso completo, execute
-            localmente com <code className="font-mono bg-amber-100 dark:bg-amber-900 px-1 rounded">npm run dev</code>.
+            Modo demonstração — dados de exemplo. Conecte um banco de dados
+            para uso completo.
           </span>
         </div>
       )}
