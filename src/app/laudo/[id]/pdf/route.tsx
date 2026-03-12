@@ -15,6 +15,13 @@ export async function GET(
     return NextResponse.json({ error: "ID inválido" }, { status: 400 });
   }
 
+  if (!db) {
+    return NextResponse.json(
+      { error: "Banco de dados não disponível no modo demonstração" },
+      { status: 503 }
+    );
+  }
+
   try {
     const laudo = await db.laudo.findUniqueOrThrow({
       where: { id: laudoId },
