@@ -4,6 +4,8 @@ import { trpc } from "@/server/trpc/client";
 import { CapagBadge } from "@/components/laudo/capag-badge";
 import { STATUS_LAUDO } from "@/lib/constants";
 import { formatBRL, formatDate, formatCpfCnpj } from "@/lib/formatters";
+import { useDemoMode, useDemoQuery } from "@/hooks/use-demo-fallback";
+import { DEMO_STATS, DEMO_LAUDOS } from "@/lib/demo-data";
 import Link from "next/link";
 import {
   FileText,
@@ -12,14 +14,40 @@ import {
   AlertCircle,
   Plus,
   ArrowRight,
+  Info,
 } from "lucide-react";
 
 export default function DashboardPage() {
-  const stats = trpc.laudo.getStats.useQuery();
-  const laudos = trpc.laudo.list.useQuery({ take: 10 });
+  const demoMode = useDemoMode();
+
+  const statsLive = trpc.laudo.getStats.useQuery(undefined, {
+    enabled: !demoMode,
+  });
+  const laudosLive = trpc.laudo.list.useQuery(
+    { take: 10 },
+    { enabled: !demoMode }
+  );
+
+  const demoStats = useDemoQuery(DEMO_STATS);
+  const demoLaudos = useDemoQuery({
+    items: DEMO_LAUDOS,
+    total: DEMO_LAUDOS.length,
+  });
+
+  const stats = demoMode ? demoStats : statsLive;
+  const laudos = demoMode ? demoLaudos : laudosLive;
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
+      {demoMode && (
+        <div className="flex items-center gap-2 px-4 py-3 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg text-sm text-amber-800 dark:text-amber-200">
+          <Info className="h-4 w-4 shrink-0" />
+          <span>
+            Modo demonstração — dados de exemplo. Para uso completo, execute
+            localmente com <code className="font-mono bg-amber-100 dark:bg-amber-900 px-1 rounded">npm run dev</code>.
+          </span>
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">

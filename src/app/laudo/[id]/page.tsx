@@ -5,8 +5,10 @@ import { trpc } from "@/server/trpc/client";
 import { CapagBadge } from "@/components/laudo/capag-badge";
 import { STATUS_LAUDO } from "@/lib/constants";
 import { formatBRL, formatCpfCnpj, formatDate } from "@/lib/formatters";
+import { useDemoMode } from "@/hooks/use-demo-fallback";
+import { DEMO_LAUDO_DETAIL } from "@/lib/demo-data";
 import Link from "next/link";
-import { ArrowLeft, FileDown, Edit, Calculator } from "lucide-react";
+import { ArrowLeft, FileDown, Edit, Calculator, Info } from "lucide-react";
 
 export default function LaudoDetailPage({
   params,
@@ -15,9 +17,22 @@ export default function LaudoDetailPage({
 }) {
   const { id } = use(params);
   const laudoId = parseInt(id);
-  const laudo = trpc.laudo.getById.useQuery({ id: laudoId });
+  const demoMode = useDemoMode();
 
-  if (laudo.isLoading) {
+  const laudoLive = trpc.laudo.getById.useQuery(
+    { id: laudoId },
+    { enabled: !demoMode }
+  );
+
+  // In demo mode, use pre-computed data for laudo 1
+  const demoData =
+    DEMO_LAUDO_DETAIL[laudoId as keyof typeof DEMO_LAUDO_DETAIL] ?? null;
+
+  const isLoading = demoMode ? false : laudoLive.isLoading;
+  const laudoData = demoMode ? demoData : laudoLive.data;
+  const laudoError = demoMode ? (demoData ? null : "not found") : laudoLive.error;
+
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <p className="text-gray-500">Carregando laudo...</p>
@@ -25,15 +40,25 @@ export default function LaudoDetailPage({
     );
   }
 
-  if (laudo.error || !laudo.data) {
+  if (laudoError || !laudoData) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex flex-col items-center justify-center h-64 gap-3">
         <p className="text-red-500">Laudo não encontrado.</p>
+        {demoMode && (
+          <p className="text-sm text-gray-500">
+            No modo demonstração, apenas o laudo #1 está disponível para
+            visualização detalhada.
+          </p>
+        )}
+        <Link href="/dashboard" className="text-blue-600 hover:underline text-sm">
+          Voltar ao Dashboard
+        </Link>
       </div>
     );
   }
 
-  const l = laudo.data;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const l = laudoData as any;
   const statusInfo = STATUS_LAUDO[l.status as keyof typeof STATUS_LAUDO];
 
   return (
